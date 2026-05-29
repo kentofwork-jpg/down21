@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>顧客管理システム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a2744;
+  --primary-light: #2d3f6e;
+  --accent: #3b7de8;
+  --accent-hover: #2563c7;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --bg: #f4f5f9;
+  --surface: #ffffff;
+  --surface2: #f8f9fc;
+  --border: #e2e5ef;
+  --border-strong: #c8cce0;
+  --text: #111827;
+  --text-sub: #6b7280;
+  --text-hint: #9ca3af;
+  --sidebar-w: 240px;
+  --header-h: 60px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ─── LAYOUT ─── */
+.app-shell { display: flex; min-height: 100vh; }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--primary);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  z-index: 100;
+  transition: transform .25s ease;
+}
+
+.sidebar-logo {
+  padding: 0 20px;
+  height: var(--header-h);
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.logo-text { color: #fff; font-weight: 500; font-size: 14px; letter-spacing: 0.02em; }
+.logo-sub  { color: rgba(255,255,255,0.45); font-size: 10px; letter-spacing: 0.08em; }
+
+.sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+
+.nav-section-label {
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.35); padding: 8px 10px 4px;
+  font-weight: 500;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--radius);
+  color: rgba(255,255,255,0.65);
+  cursor: pointer; font-size: 13.5px;
+  transition: background .15s, color .15s;
+  margin-bottom: 2px; user-select: none;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-item.active { background: var(--accent); color: #fff; }
+
+.nav-icon {
+  width: 18px; height: 18px; flex-shrink: 0;
+  opacity: 0.8;
+}
+.nav-item.active .nav-icon { opacity: 1; }
+
+/* ─── MAIN ─── */
+.main-area {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex; flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ─── TOP BAR ─── */
+.topbar {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  position: sticky; top: 0; z-index: 90;
+  box-shadow: var(--shadow);
+}
+
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.page-title { font-weight: 700; font-size: 17px; color: var(--primary); }
+.page-subtitle { font-size: 12px; color: var(--text-sub); }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; font-family: inherit;
+  cursor: pointer; border: 1px solid transparent;
+  transition: background .15s, box-shadow .15s, transform .1s;
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+.btn-outline {
+  background: transparent; color: var(--text);
+  border-color: var(--border-strong);
+}
+.btn-outline:hover { background: var(--bg); }
+
+.btn-ghost {
+  background: transparent; color: var(--text-sub);
+  border-color: transparent;
+}
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+
+.btn-danger {
+  background: var(--danger-bg); color: var(--danger);
+  border-color: #fecaca;
+}
+.btn-danger:hover { background: #fee2e2; }
+
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-icon { padding: 7px; width: 34px; height: 34px; justify-content: center; }
+
+/* ─── CONTENT ─── */
+.content { flex: 1; padding: 28px; overflow-y: auto; }
+
+/* ─── PAGE VIEWS ─── */
+.page-view { display: none; }
+.page-view.active { display: block; }
+
+/* ─── STATS ROW ─── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.stat-label { font-size: 11.5px; color: var(--text-sub); font-weight: 500; letter-spacing: 0.02em; margin-bottom: 6px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--primary); font-family: 'IBM Plex Mono', monospace; }
+.stat-sub { font-size: 11px; color: var(--text-hint); margin-top: 2px; }
+
+.stat-card.blue  { border-top: 3px solid var(--accent); }
+.stat-card.green { border-top: 3px solid var(--success); }
+.stat-card.amber { border-top: 3px solid #f59e0b; }
+.stat-card.coral { border-top: 3px solid #ef4444; }
+
+/* ─── SEARCH & FILTER BAR ─── */
+.filter-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  flex: 1; min-width: 200px;
+  position: relative;
+  display: flex; align-items: center;
+}
+
+.search-icon {
+  position: absolute; left: 10px;
+  color: var(--text-hint); pointer-events: none;
+  width: 16px; height: 16px;
+}
+
+.search-input {
+  width: 100%; padding: 7px 10px 7px 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13.5px; font-family: inherit;
+  background: var(--bg);
+  transition: border-color .15s, box-shadow .15s;
+  color: var(--text);
+  outline: none;
+}
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,125,232,0.12); }
+
+select.filter-select {
+  padding: 7px 32px 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px; font-family: inherit;
+  background: var(--bg); color: var(--text);
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  outline: none;
+}
+
+/* ─── TABLE ─── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.data-table { width: 100%; border-collapse: collapse; }
+
+.data-table th {
+  background: var(--surface2);
+  padding: 10px 14px;
+  text-align: left; font-size: 11.5px; font-weight: 600;
+  color: var(--text-sub); letter-spacing: 0.06em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer; user-select: none;
+}
+.data-table th:hover { color: var(--text); }
+
+.data-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  vertical-align: middle;
+}
+
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr { transition: background .1s; cursor: pointer; }
+.data-table tbody tr:hover { background: #f0f4ff; }
+
+.id-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 2px 6px; border-radius: 4px;
+  color: var(--text-sub);
+}
+
+.company-cell { display: flex; flex-direction: column; }
+.company-name { font-weight: 600; color: var(--primary); font-size: 13.5px; }
+.branch-name { font-size: 11.5px; color: var(--text-sub); }
+
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-yes { background: var(--success-bg); color: var(--success); }
+.badge-no  { background: var(--bg); color: var(--text-hint); border: 1px solid var(--border); }
+
+.action-btns { display: flex; gap: 4px; }
+
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px; color: var(--text-sub);
+}
+
+.page-btns { display: flex; gap: 4px; }
+.page-btn {
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+  font-family: inherit; color: var(--text);
+}
+.page-btn:hover { background: var(--bg); }
+.page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ─── FORM ─── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  max-width: 760px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+
+label.form-label {
+  font-size: 12px; font-weight: 600;
+  color: var(--text-sub); letter-spacing: 0.03em;
+}
+
+label.form-label .req { color: var(--danger); margin-left: 2px; }
+
+input.form-input,
+select.form-select,
+textarea.form-textarea {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px; font-family: inherit;
+  color: var(--text); background: var(--surface);
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+input.form-input:focus,
+select.form-select:focus,
+textarea.form-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59,125,232,0.12);
+}
+
+textarea.form-textarea { resize: vertical; min-height: 90px; }
+
+.radio-group { display: flex; gap: 16px; padding: 5px 0; }
+.radio-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13.5px; }
+.radio-label input[type=radio] { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.form-divider {
+  grid-column: 1 / -1;
+  border: none; border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+.form-section-title {
+  grid-column: 1 / -1;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-sub); margin-bottom: -4px;
+}
+
+.fetch-row { display: flex; gap: 8px; }
+.fetch-row input { flex: 1; }
+
+/* ─── DETAIL VIEW ─── */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.detail-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.detail-company { font-size: 22px; font-weight: 700; color: var(--primary); }
+.detail-branch  { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+.detail-id { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-hint); }
+
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.detail-card-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-sub);
+  margin-bottom: 14px;
+}
+
+.detail-field { margin-bottom: 12px; }
+.detail-field-label { font-size: 11px; color: var(--text-hint); margin-bottom: 2px; }
+.detail-field-value { font-size: 14px; color: var(--text); font-weight: 500; }
+
+.activity-list { display: flex; flex-direction: column; gap: 10px; }
+
+.activity-item {
+  padding: 12px 14px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--accent);
+  font-size: 13px;
+}
+
+.activity-meta { font-size: 11px; color: var(--text-hint); margin-top: 4px; }
+
+.order-item {
+  padding: 12px 14px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--success);
+  font-size: 13px;
+}
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10,20,50,0.45);
+  display: none; align-items: center; justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 560px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-md);
+  animation: slideUp .2s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-title { font-size: 17px; font-weight: 700; color: var(--primary); }
+
+/* ─── TOAST ─── */
+.toast-area { position: fixed; bottom: 24px; right: 24px; z-index: 500; display: flex; flex-direction: column; gap: 8px; }
+
+.toast {
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: var(--shadow-md);
+  animation: slideInRight .25s ease;
+}
+
+.toast.success { background: #15803d; }
+.toast.error   { background: var(--danger); }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+/* ─── LOADING ─── */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,0.7);
+  display: none; align-items: center; justify-content: center;
+  z-index: 300; backdrop-filter: blur(1px);
+}
+.loading-overlay.open { display: flex; }
+
+.loading-box {
+  background: var(--primary); color: #fff;
+  padding: 20px 32px; border-radius: var(--radius-lg);
+  display: flex; align-items: center; gap: 14px;
+  font-size: 14px;
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  padding: 60px 20px; text-align: center;
+  color: var(--text-hint);
+}
+.empty-state svg { opacity: 0.25; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .detail-layout { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: 1; }
+}
+
+@media (max-width: 640px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main-area { margin-left: 0; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .content { padding: 16px; }
+}
+
+/* ─── MISC ─── */
+.text-link {
+  color: var(--accent); text-decoration: none; font-size: 13px;
+}
+.text-link:hover { text-decoration: underline; }
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  background: #eff3ff; color: var(--accent);
+}
+
+.config-notice {
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: var(--radius); padding: 14px 16px;
+  font-size: 13px; color: #78350f;
+  margin-bottom: 20px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+
+.config-notice code {
+  background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 3px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">CRM</div>
+    <div>
+      <div class="logo-text">顧客管理</div>
+      <div class="logo-sub">CUSTOMER SYSTEM</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">メイン</div>
+    <div class="nav-item active" data-page="dashboard">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      ダッシュボード
+    </div>
+    <div class="nav-item" data-page="list">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4Z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+      顧客一覧・検索
+    </div>
+    <div class="nav-item" data-page="register">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/><path d="M19 8h2m-1-1v2"/></svg>
+      新規顧客登録
+    </div>
+    <div class="nav-section-label" style="margin-top:12px">分析</div>
+    <div class="nav-item" data-page="activity">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      営業活動入力
+    </div>
+    <div class="nav-item" data-page="settings">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      設定
+    </div>
+  </nav>
+</aside>
+
+<!-- Main Area -->
+<div class="main-area">
+  <!-- Top Bar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title" id="page-title">ダッシュボード</div>
+        <div class="page-subtitle" id="page-subtitle">顧客管理システム概要</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="navigate('register')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        新規登録
+      </button>
+      <button class="btn btn-outline" onclick="syncSheet()" id="sync-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        同期
+      </button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- ─── DASHBOARD ─── -->
+    <div class="page-view active" id="page-dashboard">
+      <div id="config-notice" class="config-notice">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>
+          <strong>初期設定が必要です。</strong>
+          GAS（Google Apps Script）をデプロイし、<code>config.js</code>内の<code>GAS_URL</code>に実際のURLを設定してください。
+          詳細は<code>README.md</code>を参照してください。
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card blue">
+          <div class="stat-label">総顧客数</div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-sub">登録済み企業</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">契約締結済</div>
+          <div class="stat-value" id="stat-contracted">—</div>
+          <div class="stat-sub">契約書取り交わし完了</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">営業活動件数</div>
+          <div class="stat-value" id="stat-activities">—</div>
+          <div class="stat-sub">累計アクティビティ</div>
+        </div>
+        <div class="stat-card coral">
+          <div class="stat-label">受注件数</div>
+          <div class="stat-value" id="stat-orders">—</div>
+          <div class="stat-sub">累計受注実績</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div style="padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-weight:600; font-size:14px; color:var(--primary);">最近登録した顧客</span>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('list')">全件表示 →</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>会社名</th><th>担当者</th><th>電話番号</th><th>契約</th><th>登録日</th>
+            </tr>
+          </thead>
+          <tbody id="dashboard-table-body">
+            <tr><td colspan="6"><div class="empty-state"><p>データを読み込み中…</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── LIST ─── -->
+    <div class="page-view" id="page-list">
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="search-input" type="text" placeholder="会社名・担当者・電話番号で検索…" id="search-input" oninput="filterTable()">
+        </div>
+        <select class="filter-select" id="filter-contract" onchange="filterTable()">
+          <option value="">契約：全て</option>
+          <option value="yes">契約あり</option>
+          <option value="no">契約なし</option>
+        </select>
+        <select class="filter-select" id="sort-select" onchange="filterTable()">
+          <option value="id-desc">ID：新しい順</option>
+          <option value="id-asc">ID：古い順</option>
+          <option value="company-asc">会社名：昇順</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="clearFilters()">リセット</button>
+        <button class="btn btn-primary btn-sm" onclick="exportCSV()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV出力
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="main-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>会社名 / 支店名</th>
+              <th>担当者</th>
+              <th>電話番号</th>
+              <th>メールアドレス</th>
+              <th>契約</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="list-table-body">
+            <tr><td colspan="7"><div class="empty-state"><p>データを読み込み中…</p></div></td></tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <div id="pagination-info">0 件中 0-0 件</div>
+          <div class="page-btns" id="pagination-btns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── REGISTER ─── -->
+    <div class="page-view" id="page-register">
+      <div class="form-card">
+        <div style="margin-bottom:20px">
+          <div style="font-size:15px; font-weight:700; color:var(--primary);">新規顧客情報登録</div>
+          <div style="font-size:12px; color:var(--text-sub); margin-top:3px">※ は必須項目</div>
+        </div>
+        <form id="register-form" onsubmit="submitRegister(event)">
+          <div class="form-grid">
+            <div class="form-section-title">基本情報</div>
+
+            <div class="form-group">
+              <label class="form-label">会社名<span class="req">※</span></label>
+              <input class="form-input" type="text" name="company" required placeholder="株式会社サンプル">
+            </div>
+            <div class="form-group">
+              <label class="form-label">支店名</label>
+              <input class="form-input" type="text" name="branch" placeholder="東京本社・大阪支店 など">
+            </div>
+            <div class="form-group">
+              <label class="form-label">担当者氏名<span class="req">※</span></label>
+              <input class="form-input" type="text" name="name" required placeholder="山田 太郎">
+            </div>
+            <div class="form-group">
+              <label class="form-label">電話番号</label>
+              <input class="form-input" type="tel" name="phone" placeholder="03-1234-5678">
+            </div>
+            <div class="form-group full">
+              <label class="form-label">メールアドレス</label>
+              <input class="form-input" type="email" name="email" placeholder="taro.yamada@example.co.jp">
+            </div>
+
+            <hr class="form-divider">
+            <div class="form-section-title">契約・ステータス</div>
+
+            <div class="form-group full">
+              <label class="form-label">契約書取り交わし</label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="contract" value="yes"> あり</label>
+                <label class="radio-label"><input type="radio" name="contract" value="no" checked> なし</label>
+              </div>
+            </div>
+
+            <hr class="form-divider">
+            <div class="form-section-title">ウェブサイト・会社概要</div>
+
+            <div class="form-group full">
+              <label class="form-label">会社ホームページ URL</label>
+              <div class="fetch-row">
+                <input class="form-input" type="url" name="website" placeholder="https://www.example.co.jp" id="website-input">
+                <button type="button" class="btn btn-outline" onclick="fetchCompanyInfo()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  情報取得
+                </button>
+              </div>
+            </div>
+            <div class="form-group full">
+              <label class="form-label">会社概要</label>
+              <textarea class="form-textarea" name="overview" id="overview-textarea" placeholder="ホームページから自動取得、または手入力"></textarea>
+            </div>
+
+            <hr class="form-divider">
+            <div class="form-section-title">営業メモ（初回）</div>
+            <div class="form-group full">
+              <label class="form-label">営業活動実績メモ</label>
+              <textarea class="form-textarea" name="sales_note" placeholder="初回コンタクト内容など"></textarea>
+            </div>
+          </div>
+
+          <div style="margin-top:24px; display:flex; gap:10px;">
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              登録する
+            </button>
+            <button type="button" class="btn btn-outline" onclick="resetForm()">クリア</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ─── ACTIVITY ─── -->
+    <div class="page-view" id="page-activity">
+      <div class="form-card" style="max-width:600px">
+        <div style="margin-bottom:20px">
+          <div style="font-size:15px; font-weight:700; color:var(--primary);">営業活動・受注実績 入力</div>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr;">
+          <div class="form-group">
+            <label class="form-label">対象顧客<span class="req">※</span></label>
+            <select class="form-select" id="activity-customer-select">
+              <option value="">— 顧客を選択 —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">種別<span class="req">※</span></label>
+            <select class="form-select" id="activity-type">
+              <option value="activity">営業活動</option>
+              <option value="order">受注実績</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">日付</label>
+            <input class="form-input" type="date" id="activity-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">内容<span class="req">※</span></label>
+            <textarea class="form-textarea" id="activity-content" style="min-height:120px" placeholder="活動内容を記入してください"></textarea>
+          </div>
+          <div class="form-group" id="order-amount-wrap" style="display:none;">
+            <label class="form-label">受注金額（円）</label>
+            <input class="form-input" type="number" id="activity-amount" placeholder="1000000">
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" onclick="submitActivity()">記録する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SETTINGS ─── -->
+    <div class="page-view" id="page-settings">
+      <div class="form-card" style="max-width:600px">
+        <div style="margin-bottom:20px; font-size:15px; font-weight:700; color:var(--primary);">システム設定</div>
+        <div class="form-grid" style="grid-template-columns:1fr;">
+          <div class="form-group">
+            <label class="form-label">GAS API URL</label>
+            <input class="form-input" type="url" id="settings-gas-url" placeholder="https://script.google.com/macros/s/xxxxx/exec">
+            <div style="font-size:11px; color:var(--text-hint); margin-top:4px">Google Apps Scriptをデプロイした際のURL</div>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="saveSettings()">設定を保存</button>
+            <button class="btn btn-outline" style="margin-left:8px" onclick="testConnection()">接続テスト</button>
+          </div>
+          <hr class="form-divider">
+          <div style="font-size:13px; color:var(--text-sub); line-height:1.8;">
+            <strong style="color:var(--text);">GAS設定手順</strong><br>
+            1. <code style="background:var(--bg); padding:1px 5px; border-radius:3px; font-family:monospace; font-size:12px">gas/Code.gs</code> をGoogle Apps Scriptにコピー<br>
+            2. スプレッドシートIDを設定<br>
+            3. デプロイ → ウェブアプリとして公開（アクセス：全員）<br>
+            4. 発行されたURLを上記に設定
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── DETAIL ─── -->
+    <div class="page-view" id="page-detail">
+      <div style="margin-bottom:16px">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('list')">← 一覧に戻る</button>
+      </div>
+      <div class="detail-layout" id="detail-content">
+        <!-- JS で生成 -->
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── MODALS ─── -->
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">顧客情報を編集</div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('edit-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="edit-form" onsubmit="submitEdit(event)">
+      <input type="hidden" name="id" id="edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">会社名<span class="req">※</span></label>
+          <input class="form-input" type="text" name="company" id="edit-company" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">支店名</label>
+          <input class="form-input" type="text" name="branch" id="edit-branch">
+        </div>
+        <div class="form-group">
+          <label class="form-label">担当者氏名</label>
+          <input class="form-input" type="text" name="name" id="edit-name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">電話番号</label>
+          <input class="form-input" type="tel" name="phone" id="edit-phone">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">メールアドレス</label>
+          <input class="form-input" type="email" name="email" id="edit-email">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">会社ホームページ</label>
+          <input class="form-input" type="url" name="website" id="edit-website">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">会社概要</label>
+          <textarea class="form-textarea" name="overview" id="edit-overview"></textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">契約書取り交わし</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="contract" value="yes" id="edit-contract-yes"> あり</label>
+            <label class="radio-label"><input type="radio" name="contract" value="no"  id="edit-contract-no"> なし</label>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px; display:flex; gap:10px;">
+        <button type="submit" class="btn btn-primary">更新する</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('edit-modal')">キャンセル</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">顧客情報を削除</div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('delete-modal')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <p style="margin-bottom:6px; font-size:14px; color:var(--text);" id="delete-confirm-text">この顧客を削除しますか？</p>
+    <p style="font-size:12px; color:var(--danger);">※ この操作は元に戻せません。</p>
+    <div style="margin-top:20px; display:flex; gap:10px;">
+      <button class="btn btn-danger" onclick="confirmDelete()">削除する</button>
+      <button class="btn btn-outline" onclick="closeModal('delete-modal')">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <span id="loading-msg">処理中…</span>
+  </div>
+</div>
+
+<!-- Toast Area -->
+<div class="toast-area" id="toast-area"></div>
+
+<!-- ─── SCRIPTS ─── -->
+<script>
+// ═══════════════════════════════════════
+//  CONFIG  — GAS URLをここに設定
+// ═══════════════════════════════════════
+const CONFIG = {
+  GAS_URL: localStorage.getItem('gas_url') || 'https://script.google.com/macros/s/AKfycbwJwrbEKcro2DVQw9UsDrz1qAjo3SQYQT2nzTyVO-U4em1SYWYOPS4B6TOaC-x-nvxZjA/exec'
+};
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let allCustomers   = [];
+let filteredCustomers = [];
+let currentPage    = 1;
+const PAGE_SIZE    = 15;
+let deleteTargetId = null;
+let currentDetailId = null;
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+const PAGE_META = {
+  dashboard: { title: 'ダッシュボード',      sub: '顧客管理システム概要' },
+  list:      { title: '顧客一覧・検索',      sub: '全顧客データの表示・検索・編集' },
+  register:  { title: '新規顧客登録',        sub: '新しい顧客情報を登録' },
+  activity:  { title: '営業活動・受注実績',  sub: 'アクティビティを記録する' },
+  settings:  { title: '設定',               sub: 'システム設定・GAS連携' },
+  detail:    { title: '顧客詳細',            sub: '詳細情報と活動履歴' },
+};
+
+function navigate(page) {
+  document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+  document.getElementById('page-' + page).classList.add('active');
+  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) navItem.classList.add('active');
+
+  const meta = PAGE_META[page] || {};
+  document.getElementById('page-title').textContent    = meta.title || '';
+  document.getElementById('page-subtitle').textContent = meta.sub   || '';
+
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'list')      renderList();
+  if (page === 'activity')  populateActivitySelect();
+  if (page === 'settings')  loadSettings();
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+  el.addEventListener('click', () => navigate(el.dataset.page));
+});
+
+// ═══════════════════════════════════════
+//  API CALLS — Netlifyプロキシ経由fetch
+//  /api/gas → netlify/functions/gas-proxy → GAS
+// ═══════════════════════════════════════
+
+async function gasCall(params) {
+  const qs  = new URLSearchParams(params).toString();
+  const res = await fetch('/api/gas?' + qs);
+  if (!res.ok) throw new Error('HTTPエラー: ' + res.status);
+  const text = await res.text();
+  // GASがJSONPで返す場合はコールバック部分を除去
+  const clean = text.replace(/^\w+\(/, '').replace(/\)$/, '').trim();
+  return JSON.parse(clean);
+}
+
+async function apiCall(action, data = {}) {
+  if (!CONFIG.GAS_URL) return demoData(action, data);
+  return gasCall({ action, ...data });
+}
+
+async function apiPost(action, data = {}) {
+  if (!CONFIG.GAS_URL) return demoData(action, data);
+  return gasCall({ action, payload: JSON.stringify(data) });
+}
+
+// ─── DEMO DATA ───
+const DEMO_CUSTOMERS = [
+  { id:'C0001', company:'株式会社テクノソリューションズ', branch:'東京本社', name:'田中 一郎', phone:'03-1234-5678', email:'tanaka@techsol.co.jp', contract:'yes', website:'https://example.co.jp', overview:'ITソリューション企業。クラウドサービスを主力に展開。', sales_note:'2024/01 初回訪問。要件ヒアリング完了。', order_note:'2024/03 クラウド基盤構築案件 受注。', created:'2024-01-15' },
+  { id:'C0002', company:'山田工業株式会社', branch:'大阪支店', name:'鈴木 花子', phone:'06-9876-5432', email:'suzuki@yamada-ind.co.jp', contract:'no', website:'', overview:'製造業向け設備メーカー。', sales_note:'2024/02 電話アポ。次回商談設定。', order_note:'', created:'2024-02-03' },
+  { id:'C0003', company:'グローバル商事株式会社', branch:'名古屋営業所', name:'佐藤 次郎', phone:'052-111-2222', email:'sato@global-trading.co.jp', contract:'yes', website:'https://global-trading.co.jp', overview:'輸出入・貿易業務全般。', sales_note:'2024/01 展示会で名刺交換。', order_note:'2024/04 輸入代行サービス 受注。', created:'2024-01-22' },
+  { id:'C0004', company:'フューチャーメディア株式会社', branch:'', name:'伊藤 明美', phone:'03-4567-8901', email:'ito@future-media.jp', contract:'no', website:'https://future-media.jp', overview:'デジタルマーケティング・メディア運営。', sales_note:'2024/03 オンライン商談。資料送付済。', order_note:'', created:'2024-03-10' },
+  { id:'C0005', company:'東洋システム株式会社', branch:'福岡支社', name:'渡辺 健太', phone:'092-333-4444', email:'watanabe@toyo-sys.co.jp', contract:'yes', website:'', overview:'システム開発・ITコンサルティング。', sales_note:'2024/02 訪問。POC合意。', order_note:'2024/04 基幹システム刷新プロジェクト 受注。', created:'2024-02-20' },
+];
+
+function demoData(action, data) {
+  if (action === 'getAll') return { success: true, customers: DEMO_CUSTOMERS };
+  if (action === 'add')    return { success: true, id: 'C' + String(DEMO_CUSTOMERS.length + 1).padStart(4,'0') };
+  if (action === 'update') return { success: true };
+  if (action === 'delete') return { success: true };
+  if (action === 'addActivity') return { success: true };
+  return { success: false };
+}
+
+// ═══════════════════════════════════════
+//  LOAD DATA
+// ═══════════════════════════════════════
+async function loadAllCustomers() {
+  try {
+    const res = await apiCall('getAll');
+    if (res.success) {
+      allCustomers = res.customers || [];
+      filteredCustomers = [...allCustomers];
+    }
+  } catch(e) {
+    console.error(e);
+    showToast('データ取得に失敗しました', 'error');
+  }
+}
+
+async function syncSheet() {
+  showLoading('スプレッドシートと同期中…');
+  await loadAllCustomers();
+  renderList();
+  loadDashboard();
+  hideLoading();
+  showToast('同期完了しました', 'success');
+}
+
+// ═══════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════
+function loadDashboard() {
+  const total       = allCustomers.length;
+  const contracted  = allCustomers.filter(c => c.contract === 'yes').length;
+  const activities  = allCustomers.filter(c => c.sales_note).length;
+  const orders      = allCustomers.filter(c => c.order_note).length;
+
+  document.getElementById('stat-total').textContent      = total;
+  document.getElementById('stat-contracted').textContent = contracted;
+  document.getElementById('stat-activities').textContent = activities;
+  document.getElementById('stat-orders').textContent     = orders;
+
+  // recent 5
+  const recent = [...allCustomers].sort((a,b) => (b.created||'').localeCompare(a.created||'')).slice(0,5);
+  const tbody = document.getElementById('dashboard-table-body');
+  if (!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>顧客データがありません</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(c => `
+    <tr onclick="showDetail('${c.id}')">
+      <td><span class="id-badge">${c.id}</span></td>
+      <td><div class="company-cell"><span class="company-name">${esc(c.company)}</span><span class="branch-name">${esc(c.branch||'')}</span></div></td>
+      <td>${esc(c.name||'')}</td>
+      <td>${esc(c.phone||'')}</td>
+      <td>${c.contract==='yes' ? '<span class="badge badge-yes">あり</span>' : '<span class="badge badge-no">なし</span>'}</td>
+      <td style="color:var(--text-sub);font-size:12px">${c.created||''}</td>
+    </tr>
+  `).join('');
+
+  // hide config notice if URL set
+  if (CONFIG.GAS_URL) document.getElementById('config-notice').style.display = 'none';
+}
+
+// ═══════════════════════════════════════
+//  LIST + FILTER
+// ═══════════════════════════════════════
+function filterTable() {
+  const q         = document.getElementById('search-input').value.toLowerCase();
+  const contract  = document.getElementById('filter-contract').value;
+  const sort      = document.getElementById('sort-select').value;
+
+  filteredCustomers = allCustomers.filter(c => {
+    const matchQ = !q || [c.company,c.branch,c.name,c.phone,c.email].join(' ').toLowerCase().includes(q);
+    const matchC = !contract || c.contract === contract;
+    return matchQ && matchC;
+  });
+
+  if (sort === 'id-asc')       filteredCustomers.sort((a,b)=>a.id.localeCompare(b.id));
+  else if (sort === 'id-desc') filteredCustomers.sort((a,b)=>b.id.localeCompare(a.id));
+  else if (sort === 'company-asc') filteredCustomers.sort((a,b)=>a.company.localeCompare(b.company));
+
+  currentPage = 1;
+  renderList();
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('filter-contract').value = '';
+  document.getElementById('sort-select').value = 'id-desc';
+  filterTable();
+}
+
+function renderList() {
+  const total = filteredCustomers.length;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const end   = Math.min(start + PAGE_SIZE, total);
+  const page  = filteredCustomers.slice(start, end);
+
+  const tbody = document.getElementById('list-table-body');
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>該当する顧客がいません</p></div></td></tr>';
+  } else {
+    tbody.innerHTML = page.map(c => `
+      <tr onclick="showDetail('${c.id}')">
+        <td><span class="id-badge">${c.id}</span></td>
+        <td><div class="company-cell"><span class="company-name">${esc(c.company)}</span><span class="branch-name">${esc(c.branch||'')}</span></div></td>
+        <td>${esc(c.name||'')}</td>
+        <td>${esc(c.phone||'')}</td>
+        <td style="font-size:12px">${esc(c.email||'')}</td>
+        <td>${c.contract==='yes' ? '<span class="badge badge-yes">あり</span>' : '<span class="badge badge-no">なし</span>'}</td>
+        <td onclick="event.stopPropagation()">
+          <div class="action-btns">
+            <button class="btn btn-outline btn-sm" onclick="openEdit('${c.id}')">編集</button>
+            <button class="btn btn-danger btn-sm" onclick="openDelete('${c.id}','${esc(c.company)}')">削除</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('pagination-info').textContent =
+    `${total} 件中 ${total?start+1:0}–${end} 件`;
+
+  renderPagination(total);
+}
+
+function renderPagination(total) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const el = document.getElementById('pagination-btns');
+  let html = '';
+  html += `<button class="page-btn" ${currentPage===1?'disabled':''} onclick="goPage(${currentPage-1})">‹</button>`;
+  for (let i=1;i<=pages;i++) {
+    if (pages > 7 && i > 2 && i < pages-1 && Math.abs(i-currentPage) > 1) {
+      if (i===3 || i===pages-2) html += `<button class="page-btn" disabled>…</button>`;
+      continue;
+    }
+    html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" ${currentPage===pages||!pages?'disabled':''} onclick="goPage(${currentPage+1})">›</button>`;
+  el.innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; renderList(); }
+
+// ═══════════════════════════════════════
+//  DETAIL
+// ═══════════════════════════════════════
+function showDetail(id) {
+  const c = allCustomers.find(x => x.id === id);
+  if (!c) return;
+  currentDetailId = id;
+
+  const el = document.getElementById('detail-content');
+  el.innerHTML = `
+    <div>
+      <div class="detail-card">
+        <div class="detail-header">
+          <div>
+            <div class="detail-id">${c.id}</div>
+            <div class="detail-company">${esc(c.company)}</div>
+            ${c.branch ? `<div class="detail-branch">${esc(c.branch)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="openEdit('${c.id}')">編集</button>
+            <button class="btn btn-danger btn-sm" onclick="openDelete('${c.id}','${esc(c.company)}')">削除</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px">
+          <div class="detail-field"><div class="detail-field-label">担当者</div><div class="detail-field-value">${esc(c.name||'—')}</div></div>
+          <div class="detail-field"><div class="detail-field-label">電話番号</div><div class="detail-field-value">${esc(c.phone||'—')}</div></div>
+          <div class="detail-field"><div class="detail-field-label">メール</div><div class="detail-field-value">${c.email ? `<a class="text-link" href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : '—'}</div></div>
+          <div class="detail-field"><div class="detail-field-label">契約書</div><div class="detail-field-value">${c.contract==='yes' ? '<span class="badge badge-yes">あり</span>' : '<span class="badge badge-no">なし</span>'}</div></div>
+          <div class="detail-field" style="grid-column:1/-1"><div class="detail-field-label">ホームページ</div><div class="detail-field-value">${c.website ? `<a class="text-link" href="${esc(c.website)}" target="_blank">${esc(c.website)}</a>` : '—'}</div></div>
+          ${c.overview ? `<div class="detail-field" style="grid-column:1/-1"><div class="detail-field-label">会社概要</div><div class="detail-field-value" style="font-size:13px;line-height:1.7">${esc(c.overview)}</div></div>` : ''}
+        </div>
+      </div>
+
+      ${c.sales_note ? `
+      <div class="detail-card">
+        <div class="detail-card-title">営業活動実績</div>
+        <div class="activity-list">
+          <div class="activity-item">
+            ${esc(c.sales_note)}
+          </div>
+        </div>
+      </div>` : ''}
+
+      ${c.order_note ? `
+      <div class="detail-card">
+        <div class="detail-card-title">受注実績</div>
+        <div class="activity-list">
+          <div class="order-item">
+            ${esc(c.order_note)}
+          </div>
+        </div>
+      </div>` : ''}
+    </div>
+
+    <div>
+      <div class="detail-card">
+        <div class="detail-card-title">クイックアクション</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-primary" onclick="navigate('activity'); setTimeout(()=>{document.getElementById('activity-customer-select').value='${c.id}'},100)">
+            営業活動を記録
+          </button>
+          <button class="btn btn-outline" onclick="openEdit('${c.id}')">情報を編集</button>
+          ${c.email ? `<a class="btn btn-outline" href="mailto:${esc(c.email)}">メールを送る</a>` : ''}
+          ${c.website ? `<a class="btn btn-outline" href="${esc(c.website)}" target="_blank">HPを開く</a>` : ''}
+        </div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-title">登録情報</div>
+        <div style="font-size:12px; color:var(--text-sub)">
+          <div>登録日：${c.created||'—'}</div>
+          <div>顧客ID：<span style="font-family:monospace">${c.id}</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  navigate('detail');
+}
+
+// ═══════════════════════════════════════
+//  REGISTER
+// ═══════════════════════════════════════
+async function submitRegister(e) {
+  e.preventDefault();
+  const form = e.target;
+  const fd   = new FormData(form);
+  const data = Object.fromEntries(fd);
+
+  showLoading('登録中…');
+  try {
+    const res = await apiPost('add', {
+      ...data,
+      created: new Date().toISOString().slice(0,10)
+    });
+    if (res.success) {
+      // add to local state (demo)
+      if (!CONFIG.GAS_URL) {
+        const newId = 'C' + String(allCustomers.length + 1).padStart(4,'0');
+        allCustomers.push({ id:newId, ...data, created: new Date().toISOString().slice(0,10) });
+        filteredCustomers = [...allCustomers];
+      } else {
+        await loadAllCustomers();
+      }
+      form.reset();
+      hideLoading();
+      showToast('顧客を登録しました！ ID: ' + (res.id||''), 'success');
+      navigate('list');
+    } else {
+      hideLoading();
+      showToast('登録に失敗しました', 'error');
+    }
+  } catch(err) {
+    hideLoading();
+    showToast('エラー: ' + err.message, 'error');
+  }
+}
+
+function resetForm() { document.getElementById('register-form').reset(); }
+
+// ─── Fetch company info via GAS（CORSを回避するためGAS経由でClaude APIを呼ぶ）───
+async function fetchCompanyInfo() {
+  const url = document.getElementById('website-input').value.trim();
+  if (!url) { showToast('URLを入力してください', 'error'); return; }
+  if (!CONFIG.GAS_URL) { showToast('設定画面でGAS URLを入力してください', 'error'); return; }
+
+  showLoading('ホームページから会社概要を取得中…');
+  try {
+    const res = await apiPost('getOverview', { url });
+    if (res.success && res.overview) {
+      document.getElementById('overview-textarea').value = res.overview;
+      showToast('会社概要を取得しました', 'success');
+    } else {
+      showToast('取得に失敗しました: ' + (res.error || '不明なエラー'), 'error');
+    }
+  } catch(err) {
+    showToast('取得に失敗しました: ' + err.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ═══════════════════════════════════════
+//  EDIT
+// ═══════════════════════════════════════
+function openEdit(id) {
+  const c = allCustomers.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('edit-id').value       = c.id;
+  document.getElementById('edit-company').value  = c.company  || '';
+  document.getElementById('edit-branch').value   = c.branch   || '';
+  document.getElementById('edit-name').value     = c.name     || '';
+  document.getElementById('edit-phone').value    = c.phone    || '';
+  document.getElementById('edit-email').value    = c.email    || '';
+  document.getElementById('edit-website').value  = c.website  || '';
+  document.getElementById('edit-overview').value = c.overview || '';
+  document.getElementById(c.contract==='yes' ? 'edit-contract-yes' : 'edit-contract-no').checked = true;
+  openModal('edit-modal');
+}
+
+async function submitEdit(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  showLoading('更新中…');
+  try {
+    const res = await apiPost('update', data);
+    if (res.success) {
+      const idx = allCustomers.findIndex(x => x.id === data.id);
+      if (idx >= 0) Object.assign(allCustomers[idx], data);
+      filteredCustomers = [...allCustomers];
+      hideLoading();
+      closeModal('edit-modal');
+      showToast('更新しました', 'success');
+      renderList();
+      if (currentDetailId === data.id) showDetail(data.id);
+    } else {
+      hideLoading(); showToast('更新に失敗しました', 'error');
+    }
+  } catch(err) { hideLoading(); showToast('エラー: '+err.message,'error'); }
+}
+
+// ═══════════════════════════════════════
+//  DELETE
+// ═══════════════════════════════════════
+function openDelete(id, company) {
+  deleteTargetId = id;
+  document.getElementById('delete-confirm-text').textContent = `「${company}」を削除しますか？`;
+  openModal('delete-modal');
+}
+
+async function confirmDelete() {
+  if (!deleteTargetId) return;
+  showLoading('削除中…');
+  try {
+    const res = await apiPost('delete', { id: deleteTargetId });
+    if (res.success) {
+      allCustomers = allCustomers.filter(x => x.id !== deleteTargetId);
+      filteredCustomers = filteredCustomers.filter(x => x.id !== deleteTargetId);
+      hideLoading();
+      closeModal('delete-modal');
+      showToast('削除しました', 'success');
+      renderList(); loadDashboard();
+      if (currentDetailId === deleteTargetId) navigate('list');
+      deleteTargetId = null;
+    } else { hideLoading(); showToast('削除に失敗しました','error'); }
+  } catch(err) { hideLoading(); showToast('エラー: '+err.message,'error'); }
+}
+
+// ═══════════════════════════════════════
+//  ACTIVITY
+// ═══════════════════════════════════════
+function populateActivitySelect() {
+  const sel = document.getElementById('activity-customer-select');
+  sel.innerHTML = '<option value="">— 顧客を選択 —</option>';
+  allCustomers.forEach(c => {
+    sel.innerHTML += `<option value="${c.id}">${c.id} ${esc(c.company)}</option>`;
+  });
+  document.getElementById('activity-date').value = new Date().toISOString().slice(0,10);
+}
+
+document.getElementById('activity-type').addEventListener('change', function() {
+  document.getElementById('order-amount-wrap').style.display = this.value === 'order' ? '' : 'none';
+});
+
+async function submitActivity() {
+  const cid     = document.getElementById('activity-customer-select').value;
+  const type    = document.getElementById('activity-type').value;
+  const date    = document.getElementById('activity-date').value;
+  const content = document.getElementById('activity-content').value.trim();
+  const amount  = document.getElementById('activity-amount').value;
+
+  if (!cid || !content) { showToast('顧客と内容を入力してください', 'error'); return; }
+
+  showLoading('記録中…');
+  try {
+    const res = await apiPost('addActivity', { customerId: cid, type, date, content, amount });
+    if (res.success) {
+      // update local
+      const c = allCustomers.find(x => x.id === cid);
+      if (c) {
+        const entry = `${date} ${content}`;
+        if (type === 'activity') c.sales_note = (c.sales_note ? c.sales_note + '\n' : '') + entry;
+        else c.order_note = (c.order_note ? c.order_note + '\n' : '') + entry;
+      }
+      document.getElementById('activity-content').value = '';
+      document.getElementById('activity-amount').value  = '';
+      hideLoading();
+      showToast('記録しました', 'success');
+    } else { hideLoading(); showToast('記録に失敗しました','error'); }
+  } catch(err) { hideLoading(); showToast('エラー: '+err.message,'error'); }
+}
+
+// ═══════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════
+function loadSettings() {
+  document.getElementById('settings-gas-url').value = CONFIG.GAS_URL;
+}
+
+function saveSettings() {
+  const url = document.getElementById('settings-gas-url').value.trim();
+  CONFIG.GAS_URL = url;
+  localStorage.setItem('gas_url', url);
+  showToast('設定を保存しました', 'success');
+}
+
+async function testConnection() {
+  saveSettings();
+  if (!CONFIG.GAS_URL) { showToast('URLを入力してください','error'); return; }
+  showLoading('接続テスト中…');
+  try {
+    const res = await apiCall('ping');
+    hideLoading();
+    showToast('接続成功！', 'success');
+  } catch(e) {
+    hideLoading();
+    showToast('接続失敗: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════
+//  CSV EXPORT
+// ═══════════════════════════════════════
+function exportCSV() {
+  const headers = ['ID','会社名','支店名','担当者氏名','電話番号','メールアドレス','契約','HP','会社概要','営業メモ','受注メモ','登録日'];
+  const rows = filteredCustomers.map(c => [
+    c.id, c.company, c.branch||'', c.name||'', c.phone||'', c.email||'',
+    c.contract==='yes'?'あり':'なし', c.website||'', c.overview||'',
+    c.sales_note||'', c.order_note||'', c.created||''
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`));
+
+  const bom = '\uFEFF';
+  const csv = bom + [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `顧客一覧_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSVをエクスポートしました', 'success');
+}
+
+// ═══════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// click outside to close
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════
+//  LOADING
+// ═══════════════════════════════════════
+function showLoading(msg='処理中…') {
+  document.getElementById('loading-msg').textContent = msg;
+  document.getElementById('loading').classList.add('open');
+}
+function hideLoading() { document.getElementById('loading').classList.remove('open'); }
+
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+function showToast(msg, type='') {
+  const area  = document.getElementById('toast-area');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.innerHTML = `
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      ${type==='success' ? '<path d="M20 6 9 17l-5-5"/>' : type==='error' ? '<path d="M18 6 6 18M6 6l12 12"/>' : '<circle cx="12" cy="12" r="10"/>'}
+    </svg>
+    ${msg}
+  `;
+  area.appendChild(toast);
+  setTimeout(() => { toast.style.opacity='0'; toast.style.transform='translateX(100%)'; toast.style.transition='all .3s'; setTimeout(()=>toast.remove(), 300); }, 3000);
+}
+
+// ═══════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+(async function init() {
+  showLoading('データを読み込み中…');
+  await loadAllCustomers();
+  hideLoading();
+  loadDashboard();
+})();
+</script>
+</body>
+</html>
